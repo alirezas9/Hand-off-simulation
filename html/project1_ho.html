@@ -1,0 +1,521 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>project1_ho</title><meta name="generator" content="MATLAB 9.11"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2024-04-14"><meta name="DC.source" content="project1_ho.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% This program computes 1 set of 4 RSS from each of the four BS</span>
+<span class="comment">% For the project, you need to augment the program:</span>
+<span class="comment">% 1. Implement the handoff algorithms that use RSS1,2,3,4 as inputs</span>
+<span class="comment">% 2. Include a loop so that you can have 100 sets of the 4 RSS</span>
+<span class="comment">% (Hint: RSS of different sets only differ due to the</span>
+<span class="comment">% random variable of shadow fading)</span>
+<span class="comment">% 3. In the loop store variable data between iterations</span>
+<span class="comment">% that will be used to make the final histograms/PDFs</span>
+
+clc; clear; close <span class="string">all</span>;
+
+<span class="comment">% Declare the various variables used for distances</span>
+R = 250;
+L = 2 * R;
+speed = 1;
+sample_time = 0.1;
+step_distance = speed * sample_time;
+g = 150;
+min_distance = sqrt(g);
+max_distance = L - sqrt(g);
+d1 = (min_distance:step_distance:max_distance);
+d2 = L - d1;
+d3 = abs(R - d1);
+d4 = abs(R - d1);
+Ns = length(d1);
+
+<span class="comment">% Declare variables and compute RSS</span>
+<span class="comment">% Part 1: Computations independant of the random variable</span>
+<span class="comment">% for shadow fading</span>
+Pt = 20;
+Po = 38;
+grad1 = 2;
+grad2 = 2;
+alpha = exp(-1/85);
+sigma1 = sqrt(8);
+sigma2 = sqrt(sigma1^2 * (1 - alpha^2));
+RSS01 = Pt - Po - (10 * grad1 * log10(d1) + 10 * grad2 * log10(d1/g));
+RSS02 = Pt - Po - (10 * grad1 * log10(d2) + 10 * grad2 * log10(d2/g));
+RSS_corner = Pt - Po - (10 * grad1 * log10(R) + 10 * grad2 * log10(R/g));
+RSS03 = RSS_corner - (10 * grad1 * log10(d3) + 10 * grad2 * log10(d3/g));
+RSS04 = RSS_corner - (10 * grad1 * log10(d4) + 10 * grad2 * log10(d4/g));
+
+<span class="keyword">for</span> i=1:Ns
+    <span class="keyword">if</span> d3(i) &lt; min_distance
+        RSS03(i) = RSS_corner;
+    <span class="keyword">end</span>
+
+    <span class="keyword">if</span> d4(i) &lt; min_distance
+        RSS04(i) = RSS_corner;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% preallocating the random variable for shadow fading</span>
+s1 = zeros(1,Ns);
+s2 = zeros(1,Ns);
+s3 = zeros(1,Ns);
+s4 = zeros(1,Ns);
+
+N     = 100;    <span class="comment">% number of trials</span>
+thres = -68;
+H     = 5  ;
+
+<span class="comment">% for storing number of hand-offs</span>
+n_ho1   = zeros(1,N);
+n_ho2   = zeros(1,N);
+n_ho3   = zeros(1,N);
+n_ho4   = zeros(1,N);
+<span class="comment">% for storing location of hand-offs</span>
+loc_ho1 = [];
+loc_ho2 = [];
+loc_ho3 = [];
+loc_ho4 = [];
+
+<span class="keyword">for</span> k=1:N
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% simple RSS algorithm</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% Part 2: Adding the random variable for shadow fading</span>
+
+    s1(1) = sigma1 * randn(1);
+    s2(1) = sigma1 * randn(1);
+    s3(1) = sigma1 * randn(1);
+    s4(1) = sigma1 * randn(1);
+    <span class="keyword">for</span> i=2:Ns
+        s1(i) = alpha * s1(i-1) + sigma2 * randn(1);
+        s2(i) = alpha * s2(i-1) + sigma2 * randn(1);
+        s3(i) = alpha * s3(i-1) + sigma2 * randn(1);
+        s4(i) = alpha * s4(i-1) + sigma2 * randn(1);
+    <span class="keyword">end</span>
+    RSS1 = RSS01 + s1;
+    RSS2 = RSS02 + s2;
+    RSS3 = RSS03 + s3;
+    RSS4 = RSS04 + s4;
+
+    RSS = [RSS1; RSS2; RSS3; RSS4];
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% simple RSS</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    current = RSS(1,:);
+    n = 0;
+    <span class="keyword">for</span> j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        <span class="keyword">if</span> RSS_max &gt; current_RSS
+            current_RSS = RSS_max;
+            current = RSS(ind,:);
+            n = n + 1;
+            loc_ho1 = [loc_ho1 d1(j)];  <span class="comment">%#ok</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    n_ho1(k) = n;
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% RSS with thres</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    current = RSS(1,:);
+    n = 0;
+    <span class="keyword">for</span> j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        <span class="keyword">if</span> current_RSS &lt; thres
+            <span class="keyword">if</span> RSS_max &gt; current_RSS
+                current_RSS = RSS_max;
+                current = RSS(ind,:);
+                n = n + 1;
+                loc_ho2 = [loc_ho2 d1(j)];  <span class="comment">%#ok</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    n_ho2(k) = n;
+
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% RSS and Hystersis algorithm</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    current = RSS(1,:);
+    n = 0;
+    <span class="keyword">for</span> j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        RSS_max = RSS_max - H;
+        <span class="keyword">if</span> RSS_max &gt; current_RSS + H
+            current_RSS = RSS_max;
+            current = RSS(ind,:);
+            n = n + 1;
+            loc_ho3 = [loc_ho3 d1(j)];  <span class="comment">%#ok</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    n_ho3(k) = n;
+
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">% RSS with thres and Hystersis algorithm</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    current = RSS(1,:);
+    n = 0;
+    <span class="keyword">for</span> j=1:Ns
+        current_RSS = current(j);
+        <span class="keyword">if</span> current_RSS &lt; thres
+            [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+            RSS_max = RSS_max - H;
+            <span class="keyword">if</span> RSS_max &gt; current_RSS + H
+                current_RSS = RSS_max;
+                current = RSS(ind,:);
+                n = n + 1;
+                loc_ho3 = [loc_ho3 d1(j)];  <span class="comment">%#ok</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    n_ho3(k) = n;
+
+
+<span class="keyword">end</span>
+
+<span class="comment">% Plot the RSS values obtained</span>
+figure(1)
+plot(d1, RSS1,<span class="string">'r'</span>)
+hold <span class="string">on</span>
+plot(d1, RSS2,<span class="string">'b'</span>)
+hold <span class="string">on</span>
+plot(d1, RSS3,<span class="string">'g'</span>)
+hold <span class="string">on</span>
+plot(d1, RSS4,<span class="string">'c'</span>)
+title(<span class="string">'RSS versus distance along route'</span>)
+xlabel(<span class="string">'distance from BS1 in meters'</span>);
+ylabel(<span class="string">'dBm'</span>);
+
+<span class="comment">% Plot PDF(histogram) of hand-offs</span>
+figure(2)
+title(<span class="string">'simple RSS'</span>)
+subplot(211)
+histogram(n_ho1, <span class="string">'FaceColor'</span>, <span class="string">'r'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'n'</span>)
+subplot(212)
+histogram(loc_ho1, <span class="string">'FaceColor'</span>, <span class="string">'r'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'distance from BS1 in meters'</span>);
+
+figure(3)
+title(<span class="string">'RSS with thres'</span>)
+subplot(211)
+histogram(n_ho2, <span class="string">'FaceColor'</span>, <span class="string">'g'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'n'</span>)
+subplot(212)
+histogram(loc_ho2, <span class="string">'FaceColor'</span>, <span class="string">'g'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'distance from BS1 in meters'</span>);
+
+figure(4)
+title(<span class="string">'RSS and Hystersis'</span>)
+subplot(211)
+histogram(n_ho3, <span class="string">'FaceColor'</span>, <span class="string">'b'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'n'</span>)
+subplot(212)
+histogram(loc_ho3, <span class="string">'FaceColor'</span>, <span class="string">'b'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'distance from BS1 in meters'</span>);
+
+figure(5)
+title(<span class="string">'RSS with thres and Hystersis'</span>)
+subplot(211)
+histogram(n_ho4, <span class="string">'FaceColor'</span>, <span class="string">'k'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'n'</span>)
+subplot(212)
+histogram(loc_ho4, <span class="string">'FaceColor'</span>, <span class="string">'k'</span>, Normalization=<span class="string">'pdf'</span>)
+xlabel(<span class="string">'distance from BS1 in meters'</span>);
+</pre><img vspace="5" hspace="5" src="project1_ho_01.png" alt=""> <img vspace="5" hspace="5" src="project1_ho_02.png" alt=""> <img vspace="5" hspace="5" src="project1_ho_03.png" alt=""> <img vspace="5" hspace="5" src="project1_ho_04.png" alt=""> <img vspace="5" hspace="5" src="project1_ho_05.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% This program computes 1 set of 4 RSS from each of the four BS
+% For the project, you need to augment the program:
+% 1. Implement the handoff algorithms that use RSS1,2,3,4 as inputs
+% 2. Include a loop so that you can have 100 sets of the 4 RSS
+% (Hint: RSS of different sets only differ due to the
+% random variable of shadow fading)
+% 3. In the loop store variable data between iterations
+% that will be used to make the final histograms/PDFs
+
+clc; clear; close all;
+
+% Declare the various variables used for distances
+R = 250;
+L = 2 * R;
+speed = 1;
+sample_time = 0.1;
+step_distance = speed * sample_time;
+g = 150;
+min_distance = sqrt(g);
+max_distance = L - sqrt(g);
+d1 = (min_distance:step_distance:max_distance);
+d2 = L - d1;
+d3 = abs(R - d1);
+d4 = abs(R - d1);
+Ns = length(d1);
+
+% Declare variables and compute RSS
+% Part 1: Computations independant of the random variable
+% for shadow fading
+Pt = 20;
+Po = 38;
+grad1 = 2;
+grad2 = 2;
+alpha = exp(-1/85);
+sigma1 = sqrt(8);
+sigma2 = sqrt(sigma1^2 * (1 - alpha^2));
+RSS01 = Pt - Po - (10 * grad1 * log10(d1) + 10 * grad2 * log10(d1/g));
+RSS02 = Pt - Po - (10 * grad1 * log10(d2) + 10 * grad2 * log10(d2/g));
+RSS_corner = Pt - Po - (10 * grad1 * log10(R) + 10 * grad2 * log10(R/g));
+RSS03 = RSS_corner - (10 * grad1 * log10(d3) + 10 * grad2 * log10(d3/g));
+RSS04 = RSS_corner - (10 * grad1 * log10(d4) + 10 * grad2 * log10(d4/g));
+
+for i=1:Ns
+    if d3(i) < min_distance
+        RSS03(i) = RSS_corner;
+    end
+
+    if d4(i) < min_distance
+        RSS04(i) = RSS_corner;
+    end
+end
+
+% preallocating the random variable for shadow fading
+s1 = zeros(1,Ns);
+s2 = zeros(1,Ns);
+s3 = zeros(1,Ns);
+s4 = zeros(1,Ns);
+
+N     = 100;    % number of trials
+thres = -68;
+H     = 5  ;
+
+% for storing number of hand-offs
+n_ho1   = zeros(1,N);
+n_ho2   = zeros(1,N);
+n_ho3   = zeros(1,N);
+n_ho4   = zeros(1,N);
+% for storing location of hand-offs
+loc_ho1 = [];
+loc_ho2 = [];
+loc_ho3 = [];
+loc_ho4 = [];
+
+for k=1:N
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % simple RSS algorithm
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Part 2: Adding the random variable for shadow fading
+    
+    s1(1) = sigma1 * randn(1);
+    s2(1) = sigma1 * randn(1);
+    s3(1) = sigma1 * randn(1);
+    s4(1) = sigma1 * randn(1);
+    for i=2:Ns
+        s1(i) = alpha * s1(i-1) + sigma2 * randn(1);
+        s2(i) = alpha * s2(i-1) + sigma2 * randn(1);
+        s3(i) = alpha * s3(i-1) + sigma2 * randn(1);
+        s4(i) = alpha * s4(i-1) + sigma2 * randn(1);
+    end
+    RSS1 = RSS01 + s1;
+    RSS2 = RSS02 + s2;
+    RSS3 = RSS03 + s3;
+    RSS4 = RSS04 + s4;
+    
+    RSS = [RSS1; RSS2; RSS3; RSS4];
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % simple RSS
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    current = RSS(1,:);
+    n = 0;
+    for j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        if RSS_max > current_RSS 
+            current_RSS = RSS_max;
+            current = RSS(ind,:);
+            n = n + 1;
+            loc_ho1 = [loc_ho1 d1(j)];  %#ok
+        end
+    end
+    n_ho1(k) = n;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    % RSS with thres
+    %%%%%%%%%%%%%%%%%%%%%%%%%%
+    current = RSS(1,:);
+    n = 0;
+    for j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        if current_RSS < thres
+            if RSS_max > current_RSS 
+                current_RSS = RSS_max;
+                current = RSS(ind,:);
+                n = n + 1;
+                loc_ho2 = [loc_ho2 d1(j)];  %#ok
+            end
+        end
+    end
+    n_ho2(k) = n;
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % RSS and Hystersis algorithm
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    current = RSS(1,:);
+    n = 0;
+    for j=1:Ns
+        current_RSS = current(j);
+        [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+        RSS_max = RSS_max - H;
+        if RSS_max > current_RSS + H
+            current_RSS = RSS_max;
+            current = RSS(ind,:);
+            n = n + 1;
+            loc_ho3 = [loc_ho3 d1(j)];  %#ok
+        end
+    end
+    n_ho3(k) = n;
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % RSS with thres and Hystersis algorithm
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    current = RSS(1,:);
+    n = 0;
+    for j=1:Ns
+        current_RSS = current(j);
+        if current_RSS < thres
+            [RSS_max, ind] = max([RSS1(j), RSS2(j), RSS3(j), RSS4(j)]);
+            RSS_max = RSS_max - H;
+            if RSS_max > current_RSS + H
+                current_RSS = RSS_max;
+                current = RSS(ind,:);
+                n = n + 1;
+                loc_ho3 = [loc_ho3 d1(j)];  %#ok
+            end
+        end
+    end
+    n_ho3(k) = n;
+
+    
+end
+
+% Plot the RSS values obtained
+figure(1)
+plot(d1, RSS1,'r')
+hold on
+plot(d1, RSS2,'b')
+hold on
+plot(d1, RSS3,'g')
+hold on
+plot(d1, RSS4,'c')
+title('RSS versus distance along route')
+xlabel('distance from BS1 in meters');
+ylabel('dBm');
+
+% Plot PDF(histogram) of hand-offs
+figure(2)
+title('simple RSS')
+subplot(211)
+histogram(n_ho1, 'FaceColor', 'r', Normalization='pdf')
+xlabel('n')
+subplot(212)
+histogram(loc_ho1, 'FaceColor', 'r', Normalization='pdf')
+xlabel('distance from BS1 in meters');
+
+figure(3)
+title('RSS with thres')
+subplot(211)
+histogram(n_ho2, 'FaceColor', 'g', Normalization='pdf')
+xlabel('n')
+subplot(212)
+histogram(loc_ho2, 'FaceColor', 'g', Normalization='pdf')
+xlabel('distance from BS1 in meters');
+
+figure(4)
+title('RSS and Hystersis')
+subplot(211)
+histogram(n_ho3, 'FaceColor', 'b', Normalization='pdf')
+xlabel('n')
+subplot(212)
+histogram(loc_ho3, 'FaceColor', 'b', Normalization='pdf')
+xlabel('distance from BS1 in meters');
+
+figure(5)
+title('RSS with thres and Hystersis')
+subplot(211)
+histogram(n_ho4, 'FaceColor', 'k', Normalization='pdf')
+xlabel('n')
+subplot(212)
+histogram(loc_ho4, 'FaceColor', 'k', Normalization='pdf')
+xlabel('distance from BS1 in meters');
+##### SOURCE END #####
+--></body></html>
